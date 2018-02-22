@@ -2,14 +2,16 @@
 local wafGlobalData={}
 
 --写日志
-function wafLog(logData,logFmt)
-	local data=string.format(logData,logFmt)
+function wafLog(fmt,...)
+	local arg = { ... }
+	local data=string.format(fmt,unpack(arg))
 	ngx.log(ngx.INFO,data)
 end
 
 --警告日志
-function wafWarn(logData,logFmt)
-	local data=string.format(logData,logFmt)
+function wafWarn(fmt,...)
+	local arg = { ... }
+	local data=string.format(fmt,unpack(arg))
 	ngx.log(ngx.WARN,data)
 end
 
@@ -18,27 +20,88 @@ function isTableEmpty(t)
     return t == nil or next(t) == nil
 end
 
---从Redis获取
-function getDataFromRedis(dataKey)
-	local data=nil
+--获取一个redis客户端
+function getRedisClient()
 	local redisLib = require('resty.redis')
 	local redisHandle=redisLib.new()
-	local ok,err=redisHandle.connect(redisHandle, '127.0.0.1', '6379')
+	local ok,err=redisHandle.connect(redisHandle, '172.25.10.98', '6379')
 	
 	if not ok then
 		wafWarn('redis error: %s', err)
+		redisHandle=nil
+	end
+	
+	return redisHandle
+end
+
+--关闭redis连接池
+function closeRedis(redisHandle)
+	if not redisHandle then
+		return
+	end
+	
+	local pool_max_idle_time = 10000
+	local pool_size = 100
+	local ok, err = redisHandle:set_keepalive(pool_max_idle_time, pool_size)
+	
+	if not ok then
+		wafWarn('set keepalive error: %s',err)
+	end
+	
+end
+
+--从redis中获取符合条件的key个数
+function getKeyCountFromRedis(dataKey)
+	local data=0
+	
+	local redisHandle=getRedisClient()
+	if not redisHandle then
+		return data
+	end
+	
+	redisHandle:select(1)
+	
+	local res=redisHandle:keys(dataKey)
+	
+	closeRedis(redisHandle)
+	
+	wafLog('getKeyCountFromRedis dataKey=%s',dataKey)
+	
+	if not res then
+		wafLog('redis get error: %s', dataKey)
+		return data
+	end
+	
+	if type(res)~='table' then
+		return data
+	end
+	
+	for k,v in ipairs(res) do
+		data=data+1
+	end
+	
+	return data
+end
+
+--从Redis获取
+function getDataFromRedis(dataKey)
+	local data=nil
+	
+	local redisHandle=getRedisClient()
+	if not redisHandle then
 		return data
 	end
 	
 	redisHandle:select(0)
 	
-	local res,err=redisHandle:get(dataKey)
-	redisHandle:close()
+	local res=redisHandle:get(dataKey)
+	
+	closeRedis(redisHandle)
 	
 	wafLog('getRuleFromRedis dataKey=%s',dataKey)
 	
 	if not res then
-		wafLog('redis error: %s', err)
+		wafLog('redis get error: %s', dataKey)
 	else
 		data=res
 	end
@@ -49,24 +112,22 @@ end
 --从Redis获取分数
 function getScoreFromRedis(dataKey)
 	local data=0
-	local redisLib = require('resty.redis')
-	local redisHandle=redisLib.new()
-	local ok,err=redisHandle.connect(redisHandle, '127.0.0.1', '6379')
 	
-	if not ok then
-		wafWarn('redis error: %s', err)
+	local redisHandle=getRedisClient()
+	if not redisHandle then
 		return data
 	end
 	
 	redisHandle:select(1)
 	
-	local res,err=redisHandle:get(dataKey)
-	redisHandle:close()
+	local res=redisHandle:get(dataKey)
+	
+	closeRedis(redisHandle)
 	
 	wafLog('getScoreFromRedis dataKey=%s',dataKey)
 	
 	if not res then
-		wafLog('redis error: %s', err)
+		wafLog('redis get error: %s', dataKey)
 	else
 		data=tonumber(res)
 	end
@@ -80,22 +141,50 @@ end
 
 --设置Redis分数
 function setScoreToRedis(dataKey,dataVal,timeOut)
-	local redisLib = require('resty.redis')
-	local redisHandle=redisLib.new()
-	local ok,err=redisHandle.connect(redisHandle, '127.0.0.1', '6379')
-	
-	if not ok then
-		wafWarn('redis error: %s', err)
+	local redisHandle=getRedisClient()
+	if not redisHandle then
 		return
 	end
 	
 	redisHandle:select(1)
 	
 	redisHandle:set(dataKey,dataVal)
-	redisHandle:expire(dataKey,timeOut*1000)
-	redisHandle:close()
+	redisHandle:expire(dataKey,timeOut)
+	closeRedis(redisHandle)
 	
-	wafLog('setScoreToRedis dataKey=%s',dataKey)
+	wafWarn('setScoreToRedis dataKey=%s,dataVal=%d',dataKey,dataVal)
+end
+
+--指定key值得个数加一
+function addVisitCountToRedis(dataKey,timeOut)
+	local data=0
+	
+	local redisHandle=getRedisClient()
+	if not redisHandle then
+		return data
+	end
+	
+	redisHandle:select(3)
+	
+	ngx.update_time()
+	local realKey=string.format('%s_%s',dataKey,ngx.now())
+	local dataVal=redisHandle:incr(realKey)
+	redisHandle:expire(realKey,timeOut)
+	
+	local searchKey=string.format('%s_*',dataKey)
+	local keyList=redisHandle:keys(searchKey)
+	
+	closeRedis(redisHandle)
+	
+	if type(keyList)=='table' then
+		for k,v in ipairs(keyList) do
+			data=data+1
+		end
+	end
+	
+	wafLog('addVisitCountToRedis dataKey=%s,data=%d,timeOut=%d',dataKey,data,timeOut)
+	
+	return data
 end
 
 --从全局缓存中获取
@@ -121,6 +210,11 @@ function getWafDataFromCacheDb(dataKey)
 	
 	--都没有直接返回空table
 	if not dataVal then
+		return data
+	end
+	
+	--不是字符串
+	if type(dataVal)~='string' then
 		return data
 	end
 	
@@ -308,6 +402,26 @@ function getEnvData(withScore)
 	
 	if not withScore then
 		return data
+	end
+	
+	--获取当前时间
+	ngx.update_time();
+	data.s_time=os.date('%H%M%S',ngx.time())
+	
+	if not data.s_time then
+		data.s_time=''
+	end
+	
+	--最近一分钟ip访问次数
+	data.d_count_ip_min=wafGlobalData.ip_min
+	if not data.d_count_ip_min then
+		data.d_count_ip_min=0
+	end
+	
+	--最近一分钟uuid访问次数
+	data.d_count_uuid_min=wafGlobalData.uuid_min
+	if not data.d_count_uuid_min then
+		data.d_count_uuid_min=0
 	end
 	
 	--当前访问白加分
@@ -576,6 +690,49 @@ function matchRuleLogic(logicList,currentLogicId,envData)
 	return bRet
 end
 
+
+--针对可信可疑IP二次判断
+function scoreIpJudge(dataKey)
+	if not dataKey then
+		return
+	end
+	
+	local scoreIdex=string.find(dataKey,'score')
+	
+	if scoreIdex~=1 then
+		return
+	end
+	
+	--局域网段
+	local firstLevel=string.match(dataKey,'score%a+_%a+_%d+.%d+.%d+.')
+	if not firstLevel then
+		return
+	end
+	
+	local firstKey='*'..string.sub(firstLevel,6)..'*'
+	local firstKeyCount=getKeyCountFromRedis(firstKey)
+	if firstKeyCount>5 then
+		local firstDataKey=string.sub(dataKey,6)
+		setScoreToRedis(firstDataKey,101,3600*24*30)
+		return
+	end
+
+	--相邻网段
+	local secondLevel=string.match(dataKey,'score%a+_%a+_%d+.%d+.')
+	if not secondLevel then
+		return
+	end
+	
+	local secondKey='*'..string.sub(secondLevel,6)..'*'
+	local secondKeyCount=getKeyCountFromRedis(secondKey)
+	if secondKeyCount>30 then
+		local secondDataKey=string.sub(dataKey,6)
+		setScoreToRedis(secondDataKey,101,3600*24*30)
+		return
+	end
+	
+end
+
 --响应规则动作
 function doAction(ruleData,envData)
 	local nRet=0
@@ -595,6 +752,8 @@ function doAction(ruleData,envData)
 		return nRet
 	end
 	
+	local action_value_timeout=tonumber(action_value)
+	
 	--放行
 	if action_type=='white' then
 		if action_target=='session' then
@@ -604,8 +763,13 @@ function doAction(ruleData,envData)
 		
 		if action_target=='uuid' then
 			local dataKey='white_uuid_'..envData.s_cookie_uuid
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24*2
+			end
+			
 			if string.len(envData.s_cookie_uuid)>1 then
-				setScoreToRedis(dataKey,100,3600*24*2)
+				setScoreToRedis(dataKey,100,action_value_timeout)
 			end
 			
 			nRet=12
@@ -614,8 +778,13 @@ function doAction(ruleData,envData)
 		
 		if action_target=='uid' then
 			local dataKey='white_uid_'..envData.s_cookie_uid
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24*7
+			end
+			
 			if string.len(envData.s_cookie_uid)>1 then
-				setScoreToRedis(dataKey,100,3600*24*7)
+				setScoreToRedis(dataKey,100,action_value_timeout)
 			end
 			
 			nRet=13
@@ -624,7 +793,12 @@ function doAction(ruleData,envData)
 		
 		if action_target=='ip' then
 			local dataKey='white_ip_'..envData.s_http_ip
-			setScoreToRedis(dataKey,100,3600*24)
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24
+			end
+			
+			setScoreToRedis(dataKey,100,action_value_timeout)
 			nRet=14
 			return nRet
 		end
@@ -639,8 +813,13 @@ function doAction(ruleData,envData)
 		
 		if action_target=='uuid' then
 			local dataKey='black_uuid_'..envData.s_cookie_uuid
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24*2
+			end
+			
 			if string.len(envData.s_cookie_uuid)>1 then
-				setScoreToRedis(dataKey,100,3600*24*2)
+				setScoreToRedis(dataKey,100,action_value_timeout)
 			end
 			
 			nRet=22
@@ -649,8 +828,13 @@ function doAction(ruleData,envData)
 		
 		if action_target=='uid' then
 			local dataKey='black_uid_'..envData.s_cookie_uid
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24*7
+			end
+			
 			if string.len(envData.s_cookie_uid)>1 then
-				setScoreToRedis(dataKey,100,3600*24*7)
+				setScoreToRedis(dataKey,100,action_value_timeout)
 			end
 			
 			nRet=23
@@ -659,13 +843,21 @@ function doAction(ruleData,envData)
 		
 		if action_target=='ip' then
 			local dataKey='black_ip_'..envData.s_http_ip
-			setScoreToRedis(dataKey,100,3600*24)
+			
+			if not action_value_timeout then
+				action_value_timeout=3600*24
+			end
+			
+			setScoreToRedis(dataKey,100,action_value_timeout)
 			nRet=24
 			return nRet
 		end
 	end
 	
 	local action_value_score=tonumber(action_value)
+	if not action_value_score then
+		action_value_score=0
+	end
 	
 	--可信加分
 	if action_type=='white_score' then
@@ -701,6 +893,7 @@ function doAction(ruleData,envData)
 			local dataKey='scorewhite_ip_'..envData.s_http_ip
 			local dataV=envData.d_score_ip_white+action_value_score
 			setScoreToRedis(dataKey,dataV,3600*24)
+			scoreIpJudge(dataKey)
 			nRet=0
 			return nRet
 		end
@@ -740,6 +933,7 @@ function doAction(ruleData,envData)
 			local dataKey='scoreblack_ip_'..envData.s_http_ip
 			local dataV=envData.d_score_ip_black+action_value_score
 			setScoreToRedis(dataKey,dataV,3600*24)
+			scoreIpJudge(dataKey)
 			nRet=0
 			return nRet
 		end
@@ -762,16 +956,11 @@ function checkSpWhiteAccess()
 	end
 	
 	local url=envData.s_http_header_url
+	local urlIndex=string.find(url,'/waf_auth/')
 	
 	--验证码显示页面
-	if url=='/waf_auth/check_code_page.html' then
+	if urlIndex==1 then
 		nRet=1002
-		return nRet
-	end
-	
-	--验证码校验页面
-	if url=='/waf_auth/check_code_task.html' then
-		nRet=1003
 		return nRet
 	end
 	
@@ -917,6 +1106,25 @@ function checkAccessTask()
 	end
 end
 
+--记录访问
+function recordAccess()
+	local envData=getEnvData(false)
+	
+	wafGlobalData.ip_min=0
+	wafGlobalData.uuid_min=0
+	
+	if string.len(envData.s_http_ip)>0 then
+		local dataKey='ip_'..envData.s_http_ip;
+		wafGlobalData.ip_min=addVisitCountToRedis(dataKey,60)
+	end
+	
+	if string.len(envData.s_cookie_uuid)>0 then
+		local dataKey='uuid_'..envData.s_cookie_uuid
+		wafGlobalData.uuid_min=addVisitCountToRedis(dataKey,60)
+	end
+	
+end
+
 function checkAccess()
 	
 	ngx.header["Server"]='CheerWaf'
@@ -942,7 +1150,9 @@ function checkAccess()
 		return
 	end
 	
-
+	--记录访问
+	recordAccess()
+	
 	checkAccessTask()
 end
 
