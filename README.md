@@ -4,6 +4,15 @@
 ## 架构
 cheerwaf是基于openresty设计的web应用防火墙，技术架构如下：
 ![image](https://raw.githubusercontent.com/chwjbn/cheerwaf/master/Doc/arc.png)
+- 防火墙逻辑部分采用openresty
+- 防火墙规则读取采用二级缓存设计，nginx内存+redis
+- waf的管理端采用thinkphp编写，规则保存在mysql，然后发布到redis
+- waf规则过滤主要通过access_by_lua_file实现
+- waf支持放行、拦截、行为可信加分、行为可疑加分
+- waf支持的行为粒度单次会话、访客(cookie)、注册用户(cookie)、IP地址
+- waf规则触发条件支持http头各字段、cookie字段、行为粒度的打分、行为粒度的单位时间访问次数
+- waf规则内置IP段抓取防护
+- waf规则内置伪搜索引擎蜘蛛防护
 ## 产品截图
 ![image](https://raw.githubusercontent.com/chwjbn/cheerwaf/master/Doc/w1.png)
 ![image](https://raw.githubusercontent.com/chwjbn/cheerwaf/master/Doc/w2.png)
