@@ -1,0 +1,36 @@
+<foreach name="dataList" item="vo">
+<eq name="vo.menu_level" value="0">
+	
+	<div class="list-group">
+	<h1 title="{$vo.menu_title}"><img src="{$vo.menu_icon}" /></h1>
+	<div class="list-wrap"><h2>{$vo.menu_full_title}<i></i></h2>
+      <ul>
+
+
+<foreach name="dataList" item="vvo">
+<eq name="vvo.menu_pid" value="$vo.id">
+    	
+    	<li>
+       
+       <a navid="nav{$vvo.id}" target="mainframe"> <span>{$vvo.menu_title}</span></a>
+        <ul>
+
+        
+        <foreach name="dataList" item="vvvo">
+<eq name="vvvo.menu_pid" value="$vvo.id">
+      
+        <li> <a navid="nav{$vvvo.id}" target="mainframe" href="{$vvvo.menu_url}"> <span>{$vvvo.menu_title}</span> </a></li>
+      
+       </eq>
+</foreach>
+        </ul>
+    	</li>
+</eq>
+</foreach>
+
+		</ul>
+	</div>
+	</div>
+	
+</eq>	
+</foreach>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0,user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>添加</title>
+  <link href="/static/skin/default/style.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" charset="utf-8" src="/static/scripts/jquery/jquery-1.11.2.min.js"></script>
+  <script src="/static/scripts/layer/layer.min.js"></script>
+  <script src="/static/scripts/laydate/laydate.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/scripts/webuploader/webuploader.min.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/uploader.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/laymain.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/common.js"></script>
+  <script src="/static/scripts/jquery/jquery.form.min.js"></script>
+  <script src="/static/js/base.js"></script>
+</head>
+
+<body class="mainbody">
+
+<form method="post" action="/waf/logic_add_pop/wapi/ajax.html" id="form1">
+  <!--导航栏-->
+
+  <div class="line10"></div>
+  <!--/导航栏-->
+
+  <!--内容-->
+  <div id="floatHead" class="content-tab-wrap">
+    <div class="content-tab">
+      <div class="content-tab-ul-wrap">
+        <ul>
+          <li><a class="selected" href="javascript:;">添加</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content">
+
+
+
+    <dl>
+      <dt>逻辑名称</dt>
+      <dd>
+        <input class="input" name="rule_logic_name" value=""/>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>逻辑类型</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="rule_logic_type">
+            <option value="">选择逻辑类型</option>
+            <foreach name="pageOption.ruleLogicTypeList" item="vo" key="k">
+             <option value="{$k}">{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>左侧逻辑</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="left_logic_id">
+            <option value="0">选择左侧逻辑</option>
+            <option value="0">TURE</option>
+            <foreach name="pageOption.leftLogicIdList" item="vo" key="k">
+             <option value="{$k}">{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    
+    <dl>
+      <dt>左侧逻辑类别</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="left_logic_type">
+            <option value="">选择左侧逻辑类别</option>
+            <foreach name="pageOption.leftLogicTypeList" item="vo" key="k">
+             <option value="{$k}">{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>当前逻辑KEY</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="current_logic_key">
+            <option value="">选择当前逻辑KEY</option>
+            <foreach name="pageOption.currentLogickeyList" item="vo" key="k">
+             <option value="{$k}">{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>当前逻辑操作类别</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="current_logic_type">
+            <option value="">选择当前逻辑操作类别</option>
+            <foreach name="pageOption.currentLogicTypeList" item="vo" key="k">
+             <option value="{$k}">{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+
+    <dl>
+      <dt>逻辑比较值</dt>
+      <dd>
+        <textarea class="input" name="current_logic_value"></textarea>
+      </dd>
+    </dl>
+    
+    <input type="hidden" name="rule_node_id" value="{$pageOption.rule_node_id}" />
+
+    </div>
+
+    <div class="page-footer">
+      <div class="btn-wrap">
+        <input type="button" name="btnSubmit" value="保存" id="btnSubmit" class="btn btn-submit" data-callback="successCall" />
+      </div>
+    </div>
+
+    <!--/内容-->
+
+    <!--工具栏-->
+
+    <!--/工具栏-->
+</form>
+</body>
+<script language="javascript">
+
+  function successCall()
+  {
+    window.parent.location.reload();
+  }
+
+  $(function(){
+
+
+  });
+
+
+</script>
+</html>
+
+
+
+

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>CheerWaf统一登录</title>
+<link href="/static/skin/default/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/static/scripts/jquery/jquery-1.11.2.min.js"></script>
+<script type="text/javascript" src="/static/scripts/jquery/jquery.form.min.js"></script>
+<script src="/static/scripts/layer/layer.min.js"></script>
+<script type="text/javascript" src="/static/js/base.js"></script>
+<script type="text/javascript">
+
+function successJump()
+{
+	window.location.href="{$jump_url}";
+}
+
+$(function () {
+	//检测IE
+	if ('undefined' == typeof (document.body.style.maxHeight)) 
+	{
+		window.location.href = '/index/browser_update.html';
+	}
+});
+</script>
+</head>
+
+<body class="loginbody" background="/static/skin/default/login_bg/1.jpg">
+<form method="post" action="/account/login/wapi/ajax.html" id="form1">
+<div style="width:100%; height:100%; min-width:300px; min-height:260px;"></div>
+<div class="login-wrap">
+  <div class="login-logo">LOGO</div>
+  <div class="login-form">
+    <div class="col">
+      <input name="e_user" type="text" value="" id="txtUserName" class="login-input" placeholder="登录帐号" title="登录帐号" autocomplete="on" />
+      <label class="icon user" for="txtUserName"></label>
+    </div>
+    <div class="col">
+      <input name="e_pass" type="password" id="txtPassword" class="login-input" placeholder="登录密码" title="登录密码" autocomplete="on" />
+      <label class="icon pwd" for="txtPassword"></label>
+    </div>
+    <div class="col">
+      <input type="button" name="btnSubmit" value="登&nbsp;录" id="btnSubmit" class="login-btn btn-submit" data-callback="successJump" />
+    </div>
+  </div>
+  <div class="login-tips"><i></i><p id="msgtip">登录帐号请联系&nbsp;系统管理员&nbsp;开通</p></div>
+</div>
+
+<div class="copy-right">
+  <p>我们的征途是星辰大海</p>
+  <p>版权所有&nbsp;&nbsp;CheerWaf Copyright © 2012 - <php>print_r(date('Y'));</php> cheerwaf.com Inc. All Rights Reserved.</p>
+</div>
+</form>
+</body>
+</html>

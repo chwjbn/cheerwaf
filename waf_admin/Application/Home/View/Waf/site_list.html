@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>列表</title>
+<link href="/static/skin/default/style.css" rel="stylesheet" type="text/css" />
+<link href="/static/css/pagination.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/static/scripts/jquery/jquery-1.11.2.min.js"></script>
+<script src="/static/scripts/layer/layer.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="/static/js/laymain.js"></script>
+<script type="text/javascript" charset="utf-8" src="/static/js/common.js"></script>
+<script type="text/javascript" charset="utf-8" src="/static/js/base.js"></script>
+</head>
+
+<body class="mainbody">
+<form method="post" action="" id="formList">
+<!--导航栏-->
+
+<div class="location">
+  <a href="javascript:history.back(-1);" class="back"><i></i><span>返回上一页</span></a>
+  <a href="javascript:;" class="order"><span>防火墙管理</span></a>
+  <i class="arrow"></i>
+  <span>规则</span>
+   <i class="arrow"></i>
+  <span>应用站点</span>
+</div>
+
+<!--/导航栏-->
+
+<!--工具栏-->
+<div id="floatHead" class="toolbar-wrap">
+  <div class="toolbar">
+    <div class="box-wrap">
+      <a class="menu-btn"></a>
+      <div class="l-list">
+
+        <ul class="icon-list">
+          <li><a class="add btn-pop" href="javascript:;" data-title="添加站点" data-url="/waf/site_add_pop.html"><i></i><span>添加</span></a></li>
+        </ul>
+
+      
+        <div class="menu-list">
+          
+          <div class="rule-single-select">
+            <select name="state" onchange="javascript:doSearch();" id="ddl_type">
+             <option value="-1" <eq name="option.state" value="-1">selected="selected"</eq>>站点状态</option>
+            <foreach name="pageOption.stateList" item="vo" key="k">
+            <option value="{$k}" <eq name="option.state" value="$k">selected="selected"</eq>>{$vo}</option>
+            </foreach>
+            </select>
+          </div>
+        
+        </div>
+    
+      </div>
+      <div class="r-list">
+        <input name="kw" type="text" id="txtKeywords" value="{$option.kw}" class="keyword" placeholder="名称"/>
+        <a id="lbtnSearch" class="btn-search" href="javascript:doSearch();">查询</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!--/工具栏-->
+<input type="hidden" name="page" id="page" value="1" />
+<input type="hidden" name="pageSize" id="pageSize" value="{$pageData.pageInfo.pageSize}" />
+</form>
+
+<!--列表-->
+<div class="table-container">
+  <!--文字列表-->
+  
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="ltable">
+    <tr>
+
+      <th width="100" align="center">系统ID</th>
+      <th align="left" width="150">站点名称</th>
+      <th align="left" width="200">HOST规则</th>
+      <th align="left" width="120">规则类别</th>
+      <th align="left" width="180">上次更新时间</th>
+      <th align="left" width="180">线上时间版本</th>
+      <th align="left" width="150">站点状态</th>
+      <th align="left">操作</th>
+    </tr>
+    
+    <foreach name="pageData.dataList" item="vo">
+    <tr>
+      <td align="center">{$vo.id}</td>
+      <td align="left">{$vo.rule_site_name}</td>
+      <td align="left">{$vo.http_host}</td>
+      <td align="left">{$vo.http_host_type_name}</td>
+      <td align="left">{$vo.update_time}</td>
+      <td align="left">
+      <eq name="vo.update_time" value="$vo.update_cache_time">
+      <span style="color: #09A642">{$vo.update_cache_time}</span>
+      <else/>
+      <span style="color:#C80B0E">{$vo.update_cache_time}</span>
+      </eq>
+      </td>
+      <td align="left">{$vo.state_name}</td>
+      <td align="left">
+        <a href="javascript:;" class="btn-pop" data-title="修改[{$vo.site_rule_name}]" data-url="/waf/site_edit_pop.html?id={$vo.id}">修改</a>
+        &nbsp;
+        <a href="javascript:;" class="btn-action" data-url="/waf/site_pub/wapi/ajax.html?id={$vo.id}" data-callback="pubCallBack">发布到线上</a>
+        &nbsp;
+        <a class="btn-action" href="javascript:;" data-url="/waf/site_del/wapi/ajax.html?id={$vo.id}" data-callback="delCallBack">删除</a>
+      </td>
+    </tr>
+    </foreach>
+  
+  </table>
+  
+</div>
+<!--/列表-->
+
+<!--内容底部-->
+<div class="line20"></div>
+<div class="pagelist">
+  <div class="l-btns">
+    <span>显示</span><input name="txtPageNum" type="text" value="{$pageData.pageInfo.pageSize}" id="txtPageNum" class="pagenum" onkeydown="return checkNumber(event);" /><span>条/页</span>
+  </div>
+  <div id="PageContent" class="default">
+  <span>共{$pageData.pageInfo.allCount}条记录,{$pageData.pageInfo.pageCount}页</span>
+  <a href="javascript:jumpToPage({$pageData.pageInfo.prevPage});">&lt;上一页</a>
+  <for start="$pageData.pageInfo.fromPage" end="$pageData.pageInfo.toPage" comparison="elt" step="1" name="i">
+  <eq name="pageData.pageInfo.page" value="$i">
+   <span class="current">{$i}</span>
+   <else/>
+  <a href="javascript:jumpToPage({$i});">{$i}</a>
+  </eq>
+  </for>
+  <a href="javascript:jumpToPage({$pageData.pageInfo.nextPage});">下一页&gt;</a>
+  </div>
+</div>
+<!--/内容底部-->
+</body>
+
+<script language="javascript">
+
+function doSearch()
+{
+	$('#formList').submit();
+}
+
+function jumpToPage($pageNo)
+{
+   $('#page').val($pageNo);
+   doSearch();
+}
+
+function delCallBack()
+{
+	window.top.location.href=window.top.location.href;
+}
+	
+function pubCallBack()
+{
+	window.top.location.href=window.top.location.href;
+}
+
+$(function(){
+
+
+
+   $('#txtPageNum').change(function(){
+	   $('#pageSize').val($(this).val());
+	   doSearch();
+   });
+  
+
+
+});
+
+</script>
+
+</html>
+
+

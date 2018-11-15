@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0,user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>编辑</title>
+  <link href="/static/skin/default/style.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" charset="utf-8" src="/static/scripts/jquery/jquery-1.11.2.min.js"></script>
+  <script src="/static/scripts/layer/layer.min.js"></script>
+  <script src="/static/scripts/laydate/laydate.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/scripts/webuploader/webuploader.min.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/uploader.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/laymain.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/static/js/common.js"></script>
+  <script src="/static/scripts/jquery/jquery.form.min.js"></script>
+  <script src="/static/js/base.js"></script>
+</head>
+
+<body class="mainbody">
+
+<form method="post" action="/waf/rule_edit_pop/wapi/ajax.html" id="form1">
+  <!--导航栏-->
+
+  <div class="line10"></div>
+  <!--/导航栏-->
+
+  <!--内容-->
+  <div id="floatHead" class="content-tab-wrap">
+    <div class="content-tab">
+      <div class="content-tab-ul-wrap">
+        <ul>
+			<li><a class="selected" href="javascript:;">规则动作</a></li>
+          <li><a href="javascript:;">触发条件</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content">
+
+    <dl>
+      <dt>规则名称</dt>
+      <dd>
+        <input class="input" name="rule_node_name" value="{$data.rule_node_name}"/>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>规则站点</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="rule_site_id">
+            <option value="">选择站点</option>
+            <foreach name="pageOption.siteRuleList" item="vo" key="k">
+				<option value="{$k}" <eq name="data.rule_site_id" value="$k">selected="selected"</eq>>{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    <dl>
+      <dt>规则动作</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="action_type">
+            <option value="">选择动作</option>
+            <foreach name="pageOption.actionTypeList" item="vo" key="k">
+             <option value="{$k}" <eq name="data.action_type" value="$k">selected="selected"</eq>>{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+    
+    <dl>
+      <dt>动作目标</dt>
+      <dd>
+          <div class="rule-single-select">
+          <select name="action_target">
+            <option value="">选择目标</option>
+            <foreach name="pageOption.actionTargetList" item="vo" key="k">
+             <option value="{$k}" <eq name="data.action_target" value="$k">selected="selected"</eq>>{$vo}</option>
+            </foreach>
+          </select>
+          </div>
+      </dd>
+    </dl>
+    
+
+    <dl>
+      <dt>规则动作值</dt>
+      <dd>
+        <input class="input" name="action_value" value="{$data.action_value}"/>
+      </dd>
+    </dl>
+     
+     <dl>
+      <dt>规则优先级</dt>
+      <dd>
+        <input class="input" name="rule_order" value="{$data.rule_order}"/>
+      </dd>
+    </dl>
+      
+    <input type="hidden" name="id" value="{$data.id}" />
+    </div>
+    
+   <div class="tab-content" style="display: none">
+
+    <dl>
+    
+		<div class="toolbar">
+			
+			<div class="box-wrap">
+				
+				<div class="l-list">
+
+        <ul class="icon-list">
+          <li><a class="add btn-pop" href="javascript:;" data-title="添加逻辑" data-url="/waf/logic_add_pop.html?rule_node_id={$data.id}"><i></i><span>添加</span></a></li>
+        </ul>
+		</div>
+				
+			</div>
+			
+		</div>
+     
+   <table width="100%" border="0" cellspacing="0" cellpadding="0" class="ltable">
+    <tr>
+
+      <th width="100" align="center">系统ID</th>
+      <th align="left" width="200">逻辑名称</th>
+      <th align="left" width="100">逻辑类型</th>
+      <th align="left" width="200">左侧逻辑</th>
+      <th align="center" width="120">左侧逻辑类别</th>    
+      <th align="left" >逻辑内容</th>
+      <th align="left" width="150">上次更新时间</th>
+      <th align="left" width="200">操作</th>
+    </tr>
+    
+    <foreach name="logicDataList" item="vo">
+    <tr>
+      <td align="center">{$vo.id}</td>
+      <td align="left">{$vo.rule_logic_name}</td>
+      <td align="left">{$vo.rule_logic_type_name}</td>
+      <td align="left">{$vo.left_logic_id_name}(id={$vo.left_logic_id})</td>
+      <td align="center">{$vo.left_logic_type_name}</td>  
+      <td align="left">[{$vo.current_logic_key_name}]&nbsp;[{$vo.current_logic_type_name}]&nbsp;[{$vo.current_logic_value}]</td>
+      <td align="left">{$vo.update_time}</td>
+      <td align="left">
+       <a href="javascript:;" class="btn-pop" data-title="修改[{$vo.rule_logic_name}]" data-url="/waf/logic_edit_pop.html?id={$vo.id}">修改</a>
+       &nbsp;
+        <a class="btn-action" href="javascript:;" data-url="/waf/logic_del/wapi/ajax.html?id={$vo.id}" data-callback="delCallBack">删除</a>
+      </td>
+    </tr>
+    </foreach>
+  
+  </table>
+     
+		
+    </dl>
+    
+
+    </div>
+
+    <div class="page-footer">
+      <div class="btn-wrap">
+        <input type="button" name="btnSubmit" value="保存" id="btnSubmit" class="btn btn-submit" data-callback="successCall" />
+      </div>
+    </div>
+
+    <!--/内容-->
+
+    <!--工具栏-->
+
+    <!--/工具栏-->
+</form>
+</body>
+<script language="javascript">
+
+  function successCall()
+  {
+    window.parent.location.reload();
+  }
+	
+  function delCallBack()
+  {
+	window.location.href=window.location.href;
+  }
+
+  $(function(){
+
+
+  });
+
+
+</script>
+</html>
+
+
+
