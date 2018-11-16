@@ -633,7 +633,7 @@ function matchRuleLogic(logicList,currentLogicId,envData)
 	end
 	
 	if not currentLogicData then
-		return bret
+		return bRet
 	end
 	
 	local current_logic_key=currentLogicData.current_logic_key
@@ -643,12 +643,12 @@ function matchRuleLogic(logicList,currentLogicId,envData)
 	
 	local current_logic_type=currentLogicData.current_logic_type
 	if not current_logic_type then
-		return bret
+		return bRet
 	end
 	
 	local current_logic_value=currentLogicData.current_logic_value
 	if not current_logic_value then
-		return bret
+		return bRet
 	end
 	
 	local left_logic_type=currentLogicData.left_logic_type
