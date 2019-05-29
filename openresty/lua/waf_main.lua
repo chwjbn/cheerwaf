@@ -1,3 +1,7 @@
+--防火墙配置Redis信息
+local wafConfRedisHost='127.0.0.1'
+local wafConfRedisPort='6379'
+
 --全局存取数据
 local wafGlobalData={}
 
@@ -24,7 +28,7 @@ end
 function getRedisClient()
 	local redisLib = require('resty.redis')
 	local redisHandle=redisLib.new()
-	local ok,err=redisHandle.connect(redisHandle, '172.25.10.98', '6379')
+	local ok,err=redisHandle.connect(redisHandle, wafConfRedisHost, wafConfRedisPort)
 	
 	if not ok then
 		wafWarn('redis error: %s', err)
