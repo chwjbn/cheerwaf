@@ -21,3 +21,5 @@ cheerwaf是基于openresty设计的web应用防火墙，技术架构如下：
 ## 开源地址
 - https://github.com/chwjbn/cheerwaf
 - 交流QQ：541601334
+## 支持
+![image](https://raw.githubusercontent.com/chwjbn/cheerwaf/master/Doc/zan.png)
