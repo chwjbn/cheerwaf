@@ -1,6 +1,7 @@
 --防火墙配置Redis信息
 local wafConfRedisHost='127.0.0.1'
 local wafConfRedisPort='6379'
+local wafConfBizDomain='.yuncaijing.com'
 
 --全局存取数据
 local wafGlobalData={}
@@ -382,7 +383,7 @@ function getEnvData(withScore)
 	data.s_cookie_wafsid=ngx.var.cookie_ycj_wafsid
 	if not data.s_cookie_wafsid then
 		data.s_cookie_wafsid=genWafSid()
-		ngx.header["Set-Cookie"] = 'ycj_wafsid='..data.s_cookie_wafsid..'; Path=/; domain=.yuncaijing.com; Expires=' .. ngx.cookie_time(ngx.time() + 2592000)
+		ngx.header["Set-Cookie"] = 'ycj_wafsid='..data.s_cookie_wafsid..'; Path=/; domain='.wafConfBizDomain.'; Expires=' .. ngx.cookie_time(ngx.time() + 2592000)
 	end
 	
 	data.s_cookie_uuid=ngx.var.cookie_ycj_uuid
