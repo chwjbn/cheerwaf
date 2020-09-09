@@ -334,6 +334,17 @@ function genWafSid()
 	return data
 end
 
+--生成uuid
+function genWafUUID()
+	local data=getClientIp()
+	local timeStr=os.date("%Y%m%d%H%M%S")
+	local randNum=math.random()
+	data=data..timeStr..randNum
+	data=ngx.md5(data)
+	data='uuid_'..data
+	return data
+end
+
 --获取环境变量
 function getEnvData(withScore)
 	local data={}
@@ -388,7 +399,8 @@ function getEnvData(withScore)
 	
 	data.s_cookie_uuid=ngx.var.cookie_ycj_uuid
 	if not data.s_cookie_uuid then
-		data.s_cookie_uuid=''
+		data.s_cookie_uuid=genWafUUID()
+		ngx.header["Set-Cookie"] = 'ycj_uuid='..data.s_cookie_uuid..'; Path=/; domain='..wafConfBizDomain..'; Expires=' .. ngx.cookie_time(ngx.time() + 2592000)
 	end
 	
 	data.s_cookie_uid=ngx.var.cookie_ycj_main_token
