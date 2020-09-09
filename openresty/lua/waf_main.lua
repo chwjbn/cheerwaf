@@ -383,7 +383,7 @@ function getEnvData(withScore)
 	data.s_cookie_wafsid=ngx.var.cookie_ycj_wafsid
 	if not data.s_cookie_wafsid then
 		data.s_cookie_wafsid=genWafSid()
-		ngx.header["Set-Cookie"] = 'ycj_wafsid='..data.s_cookie_wafsid..'; Path=/; domain='.wafConfBizDomain.'; Expires=' .. ngx.cookie_time(ngx.time() + 2592000)
+		ngx.header["Set-Cookie"] = 'ycj_wafsid='..data.s_cookie_wafsid..'; Path=/; domain='..wafConfBizDomain..'; Expires=' .. ngx.cookie_time(ngx.time() + 2592000)
 	end
 	
 	data.s_cookie_uuid=ngx.var.cookie_ycj_uuid
